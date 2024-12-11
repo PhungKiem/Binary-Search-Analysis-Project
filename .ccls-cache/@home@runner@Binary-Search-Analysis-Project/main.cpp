@@ -1,6 +1,9 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <cstdlib>
+#include <ctime>
+#include <chrono>
 using namespace std;
 
 // Recursive Binary Search
@@ -41,61 +44,47 @@ int sequentialSearch(const vector<int>& vec, int target) {
 }
 
 int main() {
-    vector<int> vec = {34, 7, 23, 32, 5, 62};
+    vector<int> sizes = {5000, 50000, 100000, 150000, 1000000};
+    double SumRBS = 0.0, SumIBS = 0.0, SumSeqS = 0.0;
 
-    // Sort the vector
-    sort(vec.begin(), vec.end());
+    for (int N : sizes) {
+        cout << "\nTesting with N = " << N << "\n";
 
-    // Display the sorted vector
-    cout << "Sorted vector: ";
-    for (int num : vec)
-        cout << num << " ";
-    cout << endl;
+        for (int iteration = 0; iteration < 10; ++iteration) {
+            vector<int> vec;
+            for (int i = 0; i < N; ++i) {
+                vec.push_back(rand() % 100000 + 1);
+            }
 
-    int target1 = 23; // An item that is in the list
-    int target2 = 100; // An item that is not in the list
+            sort(vec.begin(), vec.end());
+            int target = rand() % 100000 + 1;
 
-    // Recursive Binary Search
-    cout << "\nRecursive Binary Search:" << endl;
-    int index = recursiveBinarySearch(vec, 0, vec.size() - 1, target1);
-    if (index != -1)
-        cout << "Target " << target1 << " found at location " << index << endl;
-    else
-        cout << "Target " << target1 << " was not found, return value is " << index << endl;
+            // Recursive Binary Search Timing
+            auto start = chrono::high_resolution_clock::now();
+            recursiveBinarySearch(vec, 0, vec.size() - 1, target);
+            auto end = chrono::high_resolution_clock::now();
+            SumRBS += chrono::duration_cast<chrono::nanoseconds>(end - start).count() / 1000.0;
 
-    index = recursiveBinarySearch(vec, 0, vec.size() - 1, target2);
-    if (index != -1)
-        cout << "Target " << target2 << " found at location " << index << endl;
-    else
-        cout << "Target " << target2 << " was not found, return value is " << index << endl;
+            // Iterative Binary Search Timing
+            start = chrono::high_resolution_clock::now();
+            iterativeBinarySearch(vec, target);
+            end = chrono::high_resolution_clock::now();
+            SumIBS += chrono::duration_cast<chrono::nanoseconds>(end - start).count() / 1000.0;
 
-    // Iterative Binary Search
-    cout << "\nIterative Binary Search:" << endl;
-    index = iterativeBinarySearch(vec, target1);
-    if (index != -1)
-        cout << "Target " << target1 << " found at location " << index << endl;
-    else
-        cout << "Target " << target1 << " was not found, return value is " << index << endl;
+            // Sequential Search Timing
+            start = chrono::high_resolution_clock::now();
+            sequentialSearch(vec, target);
+            end = chrono::high_resolution_clock::now();
+            SumSeqS += chrono::duration_cast<chrono::nanoseconds>(end - start).count() / 1000.0;
+        }
 
-    index = iterativeBinarySearch(vec, target2);
-    if (index != -1)
-        cout << "Target " << target2 << " found at location " << index << endl;
-    else
-        cout << "Target " << target2 << " was not found, return value is " << index << endl;
+        cout << "Average Running Time for Recursive Binary Search: " << SumRBS / 10.0 << " microseconds." << endl;
+        cout << "Average Running Time for Iterative Binary Search: " << SumIBS / 10.0 << " microseconds." << endl;
+        cout << "Average Running Time for Sequential Search: " << SumSeqS / 10.0 << " microseconds." << endl;
 
-    // Sequential Search
-    cout << "\nSequential Search:" << endl;
-    index = sequentialSearch(vec, target1);
-    if (index != -1)
-        cout << "Target " << target1 << " found at location " << index << endl;
-    else
-        cout << "Target " << target1 << " was not found, return value is " << index << endl;
-
-    index = sequentialSearch(vec, target2);
-    if (index != -1)
-        cout << "Target " << target2 << " found at location " << index << endl;
-    else
-        cout << "Target " << target2 << " was not found, return value is " << index << endl;
+        // Reset accumulators for next N value
+        SumRBS = SumIBS = SumSeqS = 0.0;
+    }
 
     return 0;
 }
